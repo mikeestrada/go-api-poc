@@ -2,29 +2,51 @@ package test_test
 
 import (
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
 	"net/http/httptest"
 	"net/http"
 	"fmt"
-	"github.com/onsi/gomega"
+	"github.homedepot.com/go-api-poc/api/sample"
 )
 
 var _ = Describe("SampleApi", func() {
 	var server *ghttp.Server
+	var client *sample.SampleApi
+	//var resp *http.Response
 
 	BeforeEach(func() {
 		server = ghttp.NewServer()
-		server.AppendHandlers(ghttp.VerifyRequest("GET", "/sample"))
+		client = &sample.SampleApi{Thing: "thing"}
 	})
 
 	AfterEach(func() {
 		server.Close()
 	})
 
+	// using gomega
+	Describe("Given a sample endpoint", func() {
+		Context("When a GET request is made", func() {
+			It("should return a JSON containing 'something' ", func() {
+				// Check the status code is what we expect.
+				server.AppendHandlers(ghttp.VerifyRequest("GET", "/sample/configured"))
+				fmt.Println(server.URL() + "/sample/configured")
+				response, e := http.Get(server.URL() + "/sample/configured")
+
+				Ω(e).ShouldNot(HaveOccurred())
+				Ω(response.StatusCode).Should(Equal(http.StatusOK))
+
+				client.SampleHandler()
+				Ω(server.ReceivedRequests()).Should(HaveLen(1))
+			})
+		})
+	})
+
 	Describe("Given a sample endpoint", func() {
 		Context("When a GET request is made", func() {
 			It("should return a JSON containing 'hello world' ", func() {
 
+				server.AppendHandlers(ghttp.VerifyRequest("GET", "/sample"))
 				// Create a request to pass to our handler. We don't have any query parameters for now, so we'll
 				// pass 'nil' as the third parameter.
 				req, err := http.NewRequest("GET", "/sample", nil)
@@ -34,14 +56,14 @@ var _ = Describe("SampleApi", func() {
 
 				// We create a ResponseRecorder (which satisfies http.ResponseWriter) to record the response.
 				rr := httptest.NewRecorder()
-				handler := http.HandlerFunc()
+				handler := http.HandlerFunc(client.SampleApiHandler)
 
 				// Our handlers satisfy http.Handler, so we can call their ServeHTTP method
 				// directly and pass in our Request and ResponseRecorder.
 				handler.ServeHTTP(rr, req)
 
+				Ω(rr.Code).Should(Equal(http.StatusOK))
 				// Check the status code is what we expect.
-				gomega.Expect(rr.Code).To(gomega.Equal(http.StatusOK))
 
 				// Check the status code is what we expect.
 				if status := rr.Code; status != http.StatusOK {
