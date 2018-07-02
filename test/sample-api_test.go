@@ -6,18 +6,16 @@ import (
 	"github.com/onsi/gomega/ghttp"
 	"net/http/httptest"
 	"net/http"
-	"fmt"
 	"github.homedepot.com/go-api-poc/api/sample"
 )
 
 var _ = Describe("SampleApi", func() {
 	var server *ghttp.Server
 	var client *sample.SampleApi
-	//var resp *http.Response
 
 	BeforeEach(func() {
 		server = ghttp.NewServer()
-		client = &sample.SampleApi{Thing: "thing"}
+		client = &sample.SampleApi{DBConnection: "thing"}
 	})
 
 	AfterEach(func() {
@@ -30,7 +28,6 @@ var _ = Describe("SampleApi", func() {
 			It("should return a JSON containing 'something' ", func() {
 				// Check the status code is what we expect.
 				server.AppendHandlers(ghttp.VerifyRequest("GET", "/sample/configured"))
-				fmt.Println(server.URL() + "/sample/configured")
 				response, e := http.Get(server.URL() + "/sample/configured")
 
 				Ω(e).ShouldNot(HaveOccurred())
@@ -72,11 +69,7 @@ var _ = Describe("SampleApi", func() {
 
 				// Check the response body is what we expect.
 				expected := `{"alive": true}`
-				if rr.Body.String() != expected {
-					fmt.Printf("handler returned unexpected body: got %v want %v",
-						rr.Body.String(), expected)
-					Fail("Handler returned unexpected body.")
-				}
+				Ω(rr.Body.String()).Should(Equal(expected))
 			})
 		})
 	})

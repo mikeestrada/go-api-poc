@@ -4,9 +4,7 @@ import (
 	"github.com/gorilla/mux"
 )
 
-var sampleApi = &SampleApi{
-	"dude",
-}
+var sampleApi = &SampleApi{}
 
 // NewRouter configures a new router to the API
 func NewRouter() *mux.Router {
@@ -14,7 +12,7 @@ func NewRouter() *mux.Router {
 
 	router.HandleFunc("/sample", sampleApi.SampleApiHandler).Methods("GET")
 
-	sampleApi.Thing = "dude"
+	sampleApi.DBConnection = "sample connection"
 	router.HandleFunc("/sample/configured", sampleApi.SampleHandler()).Methods("GET")
 	return router
 }
